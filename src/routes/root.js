@@ -6,6 +6,7 @@ import {
   Form,
   redirect,
   useNavigation,
+  useSubmit,
 } from "react-router-dom";
 import { getContacts, createContact } from "../contacts";
 
@@ -25,6 +26,12 @@ export default function Root() {
   const { contacts, q } = useLoaderData();
   const navigation = useNavigation();
   const [query, setQuery] = useState(q);
+  const submit = useSubmit();
+
+  // The navigation.location will show up when the app is navigating to a new URL and loading the data for it. It then goes away when there is no pending navigation anymore.
+  const searching =
+    navigation.location &&
+    new URLSearchParams(navigation.location.search).has("q");
 
   useEffect(() => {
     setQuery(q);
@@ -38,16 +45,23 @@ export default function Root() {
           <Form id="search-form" role="search">
             <input
               id="q"
+              className={searching ? "loading" : ""}
               aria-label="Search contacts"
               placeholder="Search"
               type="search"
               name="q"
               value={query}
               onChange={(e) => {
+                const isFirstSearch = q == null;
                 setQuery(e.target.value);
+                // the argument is the form the event attached to
+                submit(e.currentTarget.form, {
+                    // similar to https://developer.mozilla.org/en-US/docs/Web/API/Location/replace
+                  replace: !isFirstSearch,
+                });
               }}
             />
-            <div id="search-spinner" aria-hidden hidden={true} />
+            <div id="search-spinner" aria-hidden hidden={!searching} />
             <div className="sr-only" aria-live="polite"></div>
           </Form>
           <Form method="post">
